@@ -1,0 +1,136 @@
+{
+  "protocol": {
+    "flux": "15K connexions KDDTest+, épisodes d'attaque insérés (seed 42)",
+    "window": 30,
+    "stride": 10,
+    "features": [
+      "duration",
+      "src_bytes",
+      "dst_bytes",
+      "count",
+      "srv_count",
+      "serror_rate",
+      "srv_serror_rate",
+      "rerror_rate",
+      "srv_rerror_rate",
+      "same_srv_rate",
+      "diff_srv_rate",
+      "dst_host_count",
+      "dst_host_srv_count",
+      "dst_host_same_srv_rate",
+      "dst_host_serror_rate",
+      "dst_host_rerror_rate"
+    ],
+    "split": "calibration/évaluation disjoints sur fenêtres pures",
+    "fpr_target": 0.02
+  },
+  "stream_composition": {
+    "DoS": 480,
+    "Probe": 360,
+    "R2L": 600,
+    "U2R": 40,
+    "normal": 3546
+  },
+  "n_windows": 500,
+  "topo_ms_per_window": 4.37,
+  "bootstrap_psig_vs_normal": {
+    "DoS": {
+      "contrast": 0.016851502109391292,
+      "ci95": [
+        -0.013970463197717511,
+        0.05094237246044413
+      ],
+      "p_value": 0.1635,
+      "significant": false
+    },
+    "Probe": {
+      "contrast": 0.036725220438055164,
+      "ci95": [
+        0.0007415536562055062,
+        0.0762773880415617
+      ],
+      "p_value": 0.0215,
+      "significant": true
+    },
+    "R2L": {
+      "contrast": 0.05351311714747961,
+      "ci95": [
+        0.0322120638945591,
+        0.07464363099259047
+      ],
+      "p_value": 0.0,
+      "significant": true
+    }
+  },
+  "baseline_classical": {
+    "f1": 0.8988764044943819,
+    "recall": 0.9090909090909091,
+    "precision": 0.8888888888888888,
+    "fpr": 0.03424657534246575
+  },
+  "baseline_topo": {
+    "f1": 0.1568627450980392,
+    "recall": 0.09090909090909091,
+    "precision": 0.5714285714285714,
+    "fpr": 0.02054794520547945
+  },
+  "fusion_best": {
+    "w_classical": 0.8,
+    "w_topo": 0.2,
+    "f1": 0.9111111111111111,
+    "precision": 0.8913043478260869,
+    "recall": 0.9318181818181818,
+    "fpr": 0.03424657534246575,
+    "threshold": 1.7505966268763198
+  },
+  "per_family_recall": {
+    "DoS": {
+      "n": 19,
+      "recall_classical": 1.0,
+      "recall_fusion": 1.0
+    },
+    "Probe": {
+      "n": 8,
+      "recall_classical": 1.0,
+      "recall_fusion": 1.0
+    },
+    "R2L": {
+      "n": 16,
+      "recall_classical": 0.75,
+      "recall_fusion": 0.8125
+    }
+  },
+  "alert_proofs": [
+    {
+      "window_start": 620,
+      "true_label": "DoS",
+      "combined_score": 24.1366,
+      "proof_sha256": "661cf53cce0c4959efd59ffa13feb3021be88feb697059b35dcdee675aa13c9b"
+    },
+    {
+      "window_start": 310,
+      "true_label": "normal",
+      "combined_score": 1.7938,
+      "proof_sha256": "60e228cb06d2de1f00c4969db125513863c83d76d6363cadaab7559712021977"
+    },
+    {
+      "window_start": 1800,
+      "true_label": "R2L",
+      "combined_score": 2.4102,
+      "proof_sha256": "80d23d0421bd39e657c36635de629dcb74171e7980dcd3d56cb5c0b3f2120ef3"
+    },
+    {
+      "window_start": 650,
+      "true_label": "DoS",
+      "combined_score": 19.0983,
+      "proof_sha256": "02b96ab681fd6fb878d89dd02ba1bd2efc218c1f6b6c87da445d4e3600d688d1"
+    },
+    {
+      "window_start": 3660,
+      "true_label": "DoS",
+      "combined_score": 21.6894,
+      "proof_sha256": "138140ddbfbb15d35238ac8da24e6cca76ec1ed6056db3de4e54647494a21945"
+    }
+  ],
+  "runtime_s": 8.9
+}
