@@ -1,55 +1,96 @@
-# RATISS-Cyber — Détection d'intrusion topologique
+# 🛡️ RATISS-Cyber — Détection d'intrusion par topologie des transitions de phase
 
 **POC RATISS Labs (Cameroun) — Jonathan Evina**
-Prototype de NIDS couplant les algorithmes classiques de cybersécurité avec
-l'arsenal topologique RATISS (Vietoris-Rips, P_sig, métrique couplée robuste).
-Cible : démo SMI CybIA, Douala, novembre 2026.
+Prototype de NIDS couplant algorithmes classiques + arsenal topologique RATISS
+(Vietoris-Rips, P_sig, Kibble-Zurek). Cible : démo SMI CybIA, Douala, nov. 2026.
 
-> Les algorithmes classiques voient les **symptômes**. RATISS voit la
-> **structure**. La fusion voit les deux — et chaque alerte est prouvée.
+> Les classiques voient les **symptômes**. RATISS voit la **structure**.
+> La fusion adaptative choisit le bon canal — et chaque alerte est **prouvée** par SHA-256.
 
-## État : Phase 5 terminée ✅ — prêt pour SMI
+![Résultats du système](docs/figures/doc_results_summary.png)
 
-| Phase | Fichier | Résultat clé |
-|---|---|---|
-| 1.1 Datasets | `docs/DATASETS.md` | NSL-KDD (benchmark) + CIC-IDS2017 (validation) |
-| 1.2 Benchmark classiques | `docs/BENCHMARK_PHASE1.md` | F1 max 0.862 (OC-SVM) — personne > 0.90 sur attaques inédites |
-| 1.3 Lacunes | `docs/GAP_ANALYSIS.md` | **R2L : classique 5.8% vs P_sig +66%** — complémentarité prouvée |
-| 1.4 Architecture v1 | `docs/ARCHITECTURE_V1.md` | Fusion par famille + seuils adaptatifs + preuve SHA-256 |
-| 2. Pipeline complet | `docs/PHASE2.md` | Fusion F1=0.911 > classique 0.899 ; rappel R2L +8% ; P_sig R2L p<0.0001 ✅ |
-| 3. Avantage unique | `docs/PHASE3.md` | Attaques invisibles aux stats (KS ✅) : PR détecte la transition de phase 0.95 vs 0.67 |
-| 4. Arsenal RATISS | `docs/PHASE4.md` | Kibble-Zurek détecte le weaving 0.79 (classique 0.07) ; chaque attaque a son observable |
-| **5. Fusion + papier** | `docs/PHASE5.md` | **Fusion par famille : rappel 0.61 @ FPR 1.7% (2.3× classique) ; 4 figures + draft papier SMI** |
+**Central : sur trafic réel (UNSW-NB15) et synthétique, la fusion adaptative surpasse le classique — atteint la borne oracle.**
 
-## Reproduire
+## 🚀 Installation (schéma complet)
 
 ```bash
+git clone https://github.com/samajonathan9-source/Crypto-net-veo-.git
+cd Crypto-net-veo-
 pip install -r requirements.txt
-PYTHONPATH=. python benchmarks/run_nsl_kdd.py              # benchmark classique
-PYTHONPATH=. python benchmarks/run_topo_probe.py           # sonde topologique
-PYTHONPATH=. python benchmarks/run_phase2_pipeline.py      # pipeline fusion NSL-KDD
-PYTHONPATH=. python benchmarks/run_synthetic_validation.py # avantage unique (synthétique)
-PYTHONPATH=. python benchmarks/run_family_fusion.py        # fusion par famille
-PYTHONPATH=. python benchmarks/make_figures.py             # figures du papier
+
+# benchmarks
+PYTHONPATH=. python benchmarks/run_synthetic_validation.py   # synthétique
+PYTHONPATH=. python benchmarks/run_adaptive_fusion.py       # UNSW réel
 
 # API + dashboard
 PYTHONPATH=. python -m uvicorn api.server:app --port 12000
 PYTHONPATH=. python -m streamlit run dashboard/app.py --server.port 12001
 ```
 
-## Structure
+![Schéma d'installation](docs/figures/doc_installation.png)
 
-- `ratiss_topo/` — moteur topologique RATISS (Vietoris-Rips GF(2), métrique couplée, canaux spectraux, arsenal : hystérésis, Kibble-Zurek, frustration KTN)
-- `cyber/` — datasets, détecteurs classiques, fenêtrage, fusion, attaques synthétiques
-- `benchmarks/` — scripts Phase 1, 2, 3 et 4
-- `api/` — API d'alerte FastAPI (9 canaux, preuve SHA-256, mémoire KZ)
+## 🧠 Architecture
+
+Flux réseau → fenêtrage → classiques (symptômes) + topologie RATISS (structure)
+→ fusion adaptative (routeur centroïdes) → alerte + preuve SHA-256.
+
+![Architecture RATISS-Cyber](docs/figures/doc_architecture.png)
+
+## 📊 Résultats (reproductibles)
+
+### Synthétique contrôlé — avantage unique
+
+Attaques conçues invisibles aux statistiques (tests KS ✅) :
+
+- **PR** détecte la transition de phase : rappel **0.95** vs 0.67.
+- **KZ cumul** détecte le tissage : rappel **0.79** vs 0.07.
+
+![Rappel par canal](docs/figures/fig1_rappel_par_canal.png)
+
+### UNSW-NB15 — trafic réel
+
+175k train / 87k test, 9 familles modernes :
+
+| Famille | Classique | Meilleur RATISS |
+|---|---|---|
+| Generic | 0.02 | **KZ cumul 0.51** |
+| Exploits | 0.17 | frustration |
+| Fuzzers | 0.14 | edge |
+| DoS | 0.07 | entropie |
+
+### Fusion adaptative = plafond oracle
+
+| Méthode | Rappel |
+|---|---|
+| Statique | 0.175 |
+| **Adaptative (routeur)** | **0.339** |
+| Oracle | 0.328 |
+
+### Robustesse temporelle (CV 5-fold TimeSeriesSplit)
+
+**0.342 ± 0.227** — robuste en moyenne, variable selon régime (documenté).
+La détection de rupture + recalibration aide sur Fold 4 (+88%).
+
+![Trajectoire KZ](docs/figures/fig3_trajectoire_kz.png)
+
+## 🗂️ Contenu
+
+- `ratiss_topo/` — moteur topologique + arsenal (hystérésis, KZ, frustration, LCT)
+- `cyber/` — classiques, fusion, fusion adaptative, régime, calibration
+- `benchmarks/` — phases 1-5 + UNSW + adaptative + CV + dynamique
+- `api/` — API FastAPI (9 canaux, preuve SHA-256, mémoire KZ)
 - `dashboard/` — dashboard Streamlit temps réel (mode campagne)
-- `artifacts/` — résultats JSON (seed 42, reproductible)
-- `docs/` — livrables Phase 1-5, figures du papier, draft SMI
+- `datasets/UNSW-NB15/` — dataset (Git LFS)
+- `docs/` — phases, figures, papier LaTeX/PDF
 
-## Feuille de route
+## 🗺️ Feuille de route
 
-Phase 1 ✅ Fondations → Phase 2 ✅ pipeline de couplage → Phase 3 ✅ avantage
-unique → Phase 4 ✅ arsenal RATISS complet → Phase 5 ✅ fusion par famille +
-figures + draft papier → **SMI CybIA, Douala, novembre 2026** : validation
-CIC-IDS2017, LCT, conversion LaTeX.
+Phase 1 ✅ fondations → 2 ✅ couplage → 3 ✅ avantage unique → 4 ✅ arsenal →
+5 ✅ fusion + figures → **SMI CybIA** : UNSW + adaptative + CV + rupture.
+
+## 🙏 Citations
+
+- UNSW-NB15 : https://research.unsw.edu.au/projects/unsw-nb15-dataset
+- NSL-KDD : https://www.unb.ca/cic/datasets/nsl.html
+
+_Construction par OpenHands sur le projet RATISS de Jonathan._

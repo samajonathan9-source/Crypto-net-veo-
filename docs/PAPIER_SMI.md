@@ -71,11 +71,26 @@ KZ_cumul détecte les campagnes groupées (pas les attaques isolées) ; la
 mutation lente reste la plus difficile (0.28) ; validation sur trafic réel
 (CIC-IDS2017) en cours ; LCT pour l'adaptation continue.
 
-## 6. Conclusion
+## 6. Validation sur trafic réel (UNSW-NB15)
+
+Le concept est validé sur UNSW-NB15 (partitions officielles, 175k/87k, 9
+familles) : le KZ cumul détecte les Generic à 0.51 vs 0.02 classique. La
+fusion adaptative (routeur à centroïdes) atteint 0.339 ≈ borne oracle 0.328,
+1.94× la statique. Validation croisée temporelle 5-fold : 0.342 ± 0.227 —
+robuste en moyenne, variable selon régime (analyse honnête du Fold 4).
+
+## 7. Limites et travaux futurs
+
+L'écart-type élevé (0.227) reflète les ruptures de régime : la détection de
+dérive + recalibration aide (Fold 4 +88%). La mutation lente reste difficile
+(fenêtres plus grandes). Calibration dynamique en production, mémoire
+procédurale pour les campagnes.
+
+## 8. Conclusion
 
 La cybersécurité gagne à regarder le trafic comme un système physique : les
 intrusions furtives sont des transitions de phase, et l'arsenal de la matière
-condensée topologique les rend visibles.
+condensée topologique les rend visibles — sur trafic réel comme en synthétique.
 
 ---
 
