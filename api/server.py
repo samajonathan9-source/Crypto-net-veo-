@@ -25,6 +25,7 @@ from cyber.classical_detectors import (
 from cyber.fusion_engine import FusionEngine, window_proof
 from cyber.synthetic_attacks import build_synthetic_dataset
 from cyber.topo_probe import window_correlation
+from ratiss_topo.arsenal import KibbleZurekTracker, triad_frustration
 from ratiss_topo.robust_metrics import coupled_metric, spectral_channels
 
 app = FastAPI(title="RATISS-Cyber", version="0.3.0")
@@ -48,22 +49,29 @@ def startup() -> None:
         PCAAutoencoderDetector().fit(X_normal),
     ]
     # calibration de la fusion sur fenêtres normales
-    engine = FusionEngine(w_classical=0.6, w_topo=0.4)
+    engine = FusionEngine(w_classical=0.5, w_topo=0.5)
     normal_scores = {"classical": [], "psig": [], "edge": [], "entropie": [],
-                     "drift": [], "neg_energy": [], "pr": []}
+                     "drift": [], "neg_energy": [], "pr": [],
+                     "frustration": [], "cumul_drift": []}
     corrs = []
+    ref_corr = window_correlation(X_normal[:30])
+    kz = KibbleZurekTracker(window=12)
+    kz.set_reference(ref_corr)
     for s in range(0, 300, 10):
         win = X_normal[s : s + 30]
         corr = window_correlation(win)
         corrs.append(corr)
         topo = coupled_metric(corr)
         spec = spectral_channels(corr)
+        kzr = kz.update(corr)
         normal_scores["classical"].append(max(d.score(win).mean() for d in detectors))
         normal_scores["psig"].append(topo["psig_seuille"])
         normal_scores["edge"].append(topo["edge"])
         normal_scores["entropie"].append(topo["entropie"])
         normal_scores["neg_energy"].append(spec["neg_energy"])
         normal_scores["pr"].append(spec["pr"])
+        normal_scores["frustration"].append(triad_frustration(corr))
+        normal_scores["cumul_drift"].append(kzr["cumul_drift"])
     drift = [0.0] + [float(np.linalg.norm(corrs[i] - corrs[i-1])) for i in range(1, len(corrs))]
     normal_scores["drift"] = drift
     engine.calibrate({k: np.array(v) for k, v in normal_scores.items()})
@@ -75,10 +83,13 @@ def startup() -> None:
         "detectors": detectors,
         "engine": engine,
         "threshold": float(np.percentile(combined, 98)),
+        "ref_corr": ref_corr,
+        "kz": KibbleZurekTracker(window=12),
         "n_start": time.time(),
         "n_analyzed": 0,
         "n_alerts": 0,
     })
+    STATE["kz"].set_reference(ref_corr)
 
 
 def analyze_window(win: np.ndarray) -> dict:
@@ -87,14 +98,17 @@ def analyze_window(win: np.ndarray) -> dict:
     corr = window_correlation(win)
     topo = coupled_metric(corr)
     spec = spectral_channels(corr)
+    kzr = STATE["kz"].update(corr)  # mémoire du flux (Kibble-Zurek)
     scores = {
         "classical": float(max(d.score(win).mean() for d in detectors)),
         "psig": topo["psig_seuille"],
         "edge": topo["edge"],
         "entropie": topo["entropie"],
-        "drift": 0.0,  # une fenêtre isolée n'a pas de trajectoire
+        "drift": 0.0,  # une fenêtre isolée n'a pas de trajectoire locale
         "neg_energy": spec["neg_energy"],
         "pr": spec["pr"],
+        "frustration": triad_frustration(corr),
+        "cumul_drift": kzr["cumul_drift"],
     }
     combined = engine.combine(scores)
     alert = bool(combined >= STATE["threshold"])
@@ -126,7 +140,8 @@ def stats() -> dict:
     return {
         "fusion_weights": {"classical": engine.w_classical, "topo": engine.w_topo},
         "threshold": STATE["threshold"],
-        "channels": ["classical", "psig", "edge", "entropie", "drift", "neg_energy", "pr"],
+        "channels": ["classical", "psig", "edge", "entropie", "drift",
+                     "neg_energy", "pr", "frustration", "cumul_drift"],
         "analyzed": STATE["n_analyzed"],
         "alerts": STATE["n_alerts"],
     }

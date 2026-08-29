@@ -21,6 +21,7 @@ from cyber.classical_detectors import (
 from cyber.fusion_engine import FusionEngine, window_proof
 from cyber.synthetic_attacks import build_synthetic_dataset
 from cyber.topo_probe import window_correlation
+from ratiss_topo.arsenal import KibbleZurekTracker, triad_frustration
 from ratiss_topo.robust_metrics import coupled_metric, spectral_channels
 
 st.set_page_config(page_title="RATISS-Cyber", page_icon="🛡️", layout="wide")
@@ -38,42 +39,52 @@ def load_engine():
         OneClassSVMDetector().fit(X_normal),
         PCAAutoencoderDetector().fit(X_normal),
     ]
-    engine = FusionEngine(w_classical=0.6, w_topo=0.4)
+    engine = FusionEngine(w_classical=0.5, w_topo=0.5)
     # calibration sur fenêtres normales
     calib = {"classical": [], "psig": [], "edge": [], "entropie": [],
-             "drift": [], "neg_energy": [], "pr": []}
+             "drift": [], "neg_energy": [], "pr": [],
+             "frustration": [], "cumul_drift": []}
     corrs = []
+    ref_corr = window_correlation(X_normal[:WINDOW])
+    kz = KibbleZurekTracker(window=12)
+    kz.set_reference(ref_corr)
     for s in range(0, 300, 10):
         win = X_normal[s : s + WINDOW]
         corr = window_correlation(win)
         corrs.append(corr)
         topo = coupled_metric(corr)
         spec = spectral_channels(corr)
+        kzr = kz.update(corr)
         calib["classical"].append(max(d.score(win).mean() for d in detectors))
         calib["psig"].append(topo["psig_seuille"])
         calib["edge"].append(topo["edge"])
         calib["entropie"].append(topo["entropie"])
         calib["neg_energy"].append(spec["neg_energy"])
         calib["pr"].append(spec["pr"])
+        calib["frustration"].append(triad_frustration(corr))
+        calib["cumul_drift"].append(kzr["cumul_drift"])
     calib["drift"] = [0.0] + [float(np.linalg.norm(corrs[i] - corrs[i-1]))
                               for i in range(1, len(corrs))]
     engine.calibrate({k: np.array(v) for k, v in calib.items()})
     combined = np.array([engine.combine({k: calib[k][i] for k in calib})
                          for i in range(len(corrs))])
     threshold = float(np.percentile(combined, 98))
-    return data, detectors, engine, threshold
+    return data, detectors, engine, threshold, ref_corr
 
 
-def score_window(win, detectors, engine, prev_corr):
+def score_window(win, detectors, engine, prev_corr, kz):
     corr = window_correlation(win)
     topo = coupled_metric(corr)
     spec = spectral_channels(corr)
     drift = float(np.linalg.norm(corr - prev_corr)) if prev_corr is not None else 0.0
+    kzr = kz.update(corr)
     scores = {
         "classical": float(max(d.score(win).mean() for d in detectors)),
         "psig": topo["psig_seuille"], "edge": topo["edge"],
         "entropie": topo["entropie"], "drift": drift,
         "neg_energy": spec["neg_energy"], "pr": spec["pr"],
+        "frustration": triad_frustration(corr),
+        "cumul_drift": kzr["cumul_drift"],
     }
     combined = engine.combine(scores)
     return scores, combined, corr
@@ -84,13 +95,13 @@ def main() -> None:
     st.caption("Les classiques voient les symptômes. RATISS voit la structure. "
                "La fusion voit les deux — et chaque alerte est prouvée (SHA-256).")
 
-    data, detectors, engine, threshold = load_engine()
+    data, detectors, engine, threshold, ref_corr = load_engine()
     X, labels = data["X"], data["labels"]
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Poids fusion", f"{engine.w_classical:.1f} classique / {engine.w_topo:.1f} topo")
     col2.metric("Seuil adaptatif (FPR 2%)", f"{threshold:.3f}")
-    col3.metric("Canaux topologiques", "P_sig · edge · entropie · drift · PR")
+    col3.metric("Canaux", "9 dont PR · frustration · cumul KZ")
 
     st.divider()
     st.subheader("Simuler une fenêtre de trafic")
@@ -100,17 +111,25 @@ def main() -> None:
          "slow_mutation (APT lent)"],
     )
     cat = scenario.split(" ")[0]
+    campagne = st.checkbox("Mode campagne (séquence de 4 fenêtres — cumul KZ)",
+                           value=(cat in ("weaving", "slow_mutation")))
 
-    if st.button("🔍 Analyser une fenêtre", type="primary"):
+    if st.button("🔍 Analyser", type="primary"):
         pool = X[labels == cat]
         rng = np.random.default_rng()
-        start = int(rng.integers(0, len(pool) - WINDOW))
-        win = pool[start : start + WINDOW]
-        # fenêtre précédente normale pour le drift
-        prev = X[labels == "normal"][:WINDOW]
-        prev_corr = window_correlation(prev)
+        prev_corr = window_correlation(X[labels == "normal"][:WINDOW])
+        kz = KibbleZurekTracker(window=12)
+        kz.set_reference(ref_corr)
 
-        scores, combined, _ = score_window(win, detectors, engine, prev_corr)
+        n_win = 4 if campagne else 1
+        results = []
+        for w in range(n_win):
+            start = int(rng.integers(0, len(pool) - WINDOW))
+            win = pool[start : start + WINDOW]
+            scores, combined, _ = score_window(win, detectors, engine, prev_corr, kz)
+            results.append((scores, combined))
+
+        scores, combined = results[-1]
         alert = combined >= threshold
 
         if alert:
@@ -120,6 +139,17 @@ def main() -> None:
 
         st.write(f"**Vérité terrain** : `{cat}` — "
                  + ("✔️ détection correcte" if (alert == (cat != "normal")) else "❌ erreur"))
+
+        if campagne and len(results) > 1:
+            st.write("**Trajectoire de la campagne (mémoire Kibble-Zurek)**")
+            traj = pd.DataFrame({
+                "fenêtre": list(range(1, len(results) + 1)),
+                "score fusion": [r[1] for r in results],
+                "cumul_drift": [r[0]["cumul_drift"] for r in results],
+            }).set_index("fenêtre")
+            st.line_chart(traj)
+            st.caption("Le cumul_drift s'accumule si l'attaque persiste — "
+                       "le système 'se souvient' de la transition (hystérésis).")
 
         c1, c2 = st.columns(2)
         with c1:
@@ -141,9 +171,11 @@ def main() -> None:
     st.markdown("""
 - **Attaques invisibles aux statistiques** : les trois attaques synthétiques
   passent les tests KS (≥ 90% des features indistinguables du normal)
-- **La topologie les voit** : le participation ratio (PR) détecte la
-  transition de phase (rappel 0.95 vs 0.67 classique)
-- **La fusion combine** : classique + structurel, seuil adaptatif à FPR 2%
+- **Chaque attaque a son observable** : PR voit la transition de phase
+  (rappel 0.95), le cumul Kibble-Zurek voit le tissage en campagne (0.79),
+  la frustration voit les triangles frustrés
+- **Arsenal RATISS** : hystérésis (mémoire), Kibble-Zurek (gel + dérive),
+  tissage KTN (frustration des triades)
 - **Preuve vérifiable** : chaque alerte embarque un hash SHA-256
 """)
 

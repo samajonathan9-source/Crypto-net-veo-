@@ -24,7 +24,7 @@
     }
   },
   "n_windows": 478,
-  "topo_ms_per_window": 5.08,
+  "topo_ms_per_window": 5.44,
   "results": {
     "classique": {
       "phase_transition": {
@@ -128,31 +128,65 @@
         "threshold": 0.575
       }
     },
-    "fusion": {
+    "frustration": {
       "phase_transition": {
-        "recall": 0.8846153846153846,
-        "fpr": 0.032467532467532464
+        "recall": 0.29310344827586204,
+        "fpr": 0.03355704697986577,
+        "threshold": 0.44285714285714284
       },
       "slow_mutation": {
-        "recall": 0.03225806451612903,
-        "fpr": 0.032467532467532464
+        "recall": 0.06896551724137931,
+        "fpr": 0.03355704697986577,
+        "threshold": 0.44285714285714284
       },
       "weaving": {
-        "recall": 0.08,
-        "fpr": 0.032467532467532464
+        "recall": 0.08620689655172414,
+        "fpr": 0.03355704697986577,
+        "threshold": 0.44285714285714284
+      }
+    },
+    "KZ_cumul": {
+      "phase_transition": {
+        "recall": 0.8793103448275862,
+        "fpr": 0.020134228187919462,
+        "threshold": 4.141486249869925
+      },
+      "slow_mutation": {
+        "recall": 0.3275862068965517,
+        "fpr": 0.020134228187919462,
+        "threshold": 4.141486249869925
+      },
+      "weaving": {
+        "recall": 0.7931034482758621,
+        "fpr": 0.020134228187919462,
+        "threshold": 4.141486249869925
+      }
+    },
+    "fusion": {
+      "phase_transition": {
+        "recall": 0.9230769230769231,
+        "fpr": 0.025974025974025976
+      },
+      "slow_mutation": {
+        "recall": 0.06451612903225806,
+        "fpr": 0.025974025974025976
+      },
+      "weaving": {
+        "recall": 0.12,
+        "fpr": 0.025974025974025976
       }
     },
     "fusion_weights": {
-      "w_classical": 0.6,
-      "w_topo": 0.4,
-      "recall_mean": 0.3322911497105045,
-      "fpr": 0.032467532467532464,
+      "w_classical": 0.5,
+      "w_topo": 0.5,
+      "recall_mean": 0.3691976840363937,
+      "fpr": 0.025974025974025976,
       "recalls": {
-        "phase_transition": 0.8846153846153846,
-        "slow_mutation": 0.03225806451612903,
-        "weaving": 0.08
+        "phase_transition": 0.9230769230769231,
+        "slow_mutation": 0.06451612903225806,
+        "weaving": 0.12
       }
     }
   },
-  "runtime_s": 7.1
+  "runtime_s": 7.5
 }

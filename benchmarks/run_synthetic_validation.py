@@ -24,6 +24,7 @@ from cyber.fusion_engine import FusionEngine
 from cyber.synthetic_attacks import build_synthetic_dataset
 from cyber.topo_probe import window_correlation
 from cyber.windowing import sliding_windows
+from ratiss_topo.arsenal import KibbleZurekTracker, triad_frustration
 from ratiss_topo.robust_metrics import coupled_metric, spectral_channels
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -66,9 +67,14 @@ def main() -> None:
     # --- scores par fenêtre : tous les canaux topologiques ---
     # Leçon du diagnostic : chaque attaque a SON observable. P_sig voit le
     # tissage, edge voit la transition de phase, la dérive voit la mutation.
-    channels = ["classical", "psig", "edge", "entropie", "pr", "neg_energy"]
+    channels = ["classical", "psig", "edge", "entropie", "pr", "neg_energy",
+                "frustration", "cumul_drift"]
     scores = {k: [] for k in channels}
     corrs = []
+    # Kibble-Zurek : référence = médiane des premières fenêtres normales
+    ref_corr = window_correlation(X[labels == "normal"][:WINDOW])
+    kz = KibbleZurekTracker(window=12)
+    kz.set_reference(ref_corr)
     t_topo = 0.0
     for s in starts:
         win = X[s : s + WINDOW]
@@ -77,6 +83,8 @@ def main() -> None:
         corr = window_correlation(win)
         topo = coupled_metric(corr)
         spec = spectral_channels(corr)
+        kzr = kz.update(corr)
+        frust = triad_frustration(corr)
         t_topo += time.perf_counter() - t1
         corrs.append(corr)
         scores["psig"].append(topo["psig_seuille"])
@@ -84,6 +92,8 @@ def main() -> None:
         scores["entropie"].append(topo["entropie"])
         scores["pr"].append(spec["pr"])
         scores["neg_energy"].append(spec["neg_energy"])
+        scores["frustration"].append(frust)
+        scores["cumul_drift"].append(kzr["cumul_drift"])
     for k in scores:
         scores[k] = np.array(scores[k])
 
@@ -103,6 +113,7 @@ def main() -> None:
         ("classique", "classical"), ("topo_P_sig", "psig"),
         ("topo_edge", "edge"), ("topo_drift", "drift"),
         ("spectral_PR", "pr"), ("spectral_negE", "neg_energy"),
+        ("frustration", "frustration"), ("KZ_cumul", "cumul_drift"),
     ]
     for system, key in systems:
         results[system] = {}
@@ -120,7 +131,8 @@ def main() -> None:
     # PR monte sous attaque (structure délocalisée, ex. hub de phase) :
     # "haut = anormal" comme les autres canaux. Vérifié empiriquement :
     # phase_transition PR=9.46 vs normal 7.65.
-    topo_keys = ["psig", "edge", "entropie", "drift", "neg_energy", "pr"]
+    topo_keys = ["psig", "edge", "entropie", "drift", "neg_energy", "pr",
+                 "frustration", "cumul_drift"]
     fusion_input = {
         "classical": scores["classical"],
         **{k: scores[k] for k in topo_keys},

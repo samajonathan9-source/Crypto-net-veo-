@@ -8,7 +8,7 @@ Cible : démo SMI CybIA, Douala, novembre 2026.
 > Les algorithmes classiques voient les **symptômes**. RATISS voit la
 > **structure**. La fusion voit les deux — et chaque alerte est prouvée.
 
-## État : Phase 3 terminée ✅
+## État : Phase 4 terminée ✅
 
 | Phase | Fichier | Résultat clé |
 |---|---|---|
@@ -17,7 +17,8 @@ Cible : démo SMI CybIA, Douala, novembre 2026.
 | 1.3 Lacunes | `docs/GAP_ANALYSIS.md` | **R2L : classique 5.8% vs P_sig +66%** — complémentarité prouvée |
 | 1.4 Architecture v1 | `docs/ARCHITECTURE_V1.md` | Fusion par famille + seuils adaptatifs + preuve SHA-256 |
 | 2. Pipeline complet | `docs/PHASE2.md` | Fusion F1=0.911 > classique 0.899 ; rappel R2L +8% ; P_sig R2L p<0.0001 ✅ |
-| **3. Avantage unique + démo** | `docs/PHASE3.md` | **Attaques invisibles aux stats (tests KS ✅) : PR détecte la transition de phase rappel 0.95 vs 0.67 classique ; API + dashboard live** |
+| 3. Avantage unique | `docs/PHASE3.md` | Attaques invisibles aux stats (KS ✅) : PR détecte la transition de phase 0.95 vs 0.67 |
+| **4. Arsenal RATISS** | `docs/PHASE4.md` | **Kibble-Zurek détecte le weaving 0.79 (classique 0.07) ; hystérésis + frustration KTN ; chaque attaque a son observable** |
 
 ## Reproduire
 
@@ -35,16 +36,16 @@ PYTHONPATH=. python -m streamlit run dashboard/app.py --server.port 12001
 
 ## Structure
 
-- `ratiss_topo/` — moteur topologique RATISS (Vietoris-Rips GF(2), métrique couplée, canaux spectraux)
+- `ratiss_topo/` — moteur topologique RATISS (Vietoris-Rips GF(2), métrique couplée, canaux spectraux, arsenal : hystérésis, Kibble-Zurek, frustration KTN)
 - `cyber/` — datasets, détecteurs classiques, fenêtrage, fusion, attaques synthétiques
-- `benchmarks/` — scripts Phase 1, 2 et 3
-- `api/` — API d'alerte FastAPI (preuve SHA-256)
-- `dashboard/` — dashboard Streamlit temps réel
+- `benchmarks/` — scripts Phase 1, 2, 3 et 4
+- `api/` — API d'alerte FastAPI (9 canaux, preuve SHA-256, mémoire KZ)
+- `dashboard/` — dashboard Streamlit temps réel (mode campagne)
 - `artifacts/` — résultats JSON (seed 42, reproductible)
-- `docs/` — livrables Phase 1, 2 et 3
+- `docs/` — livrables Phase 1, 2, 3 et 4
 
 ## Feuille de route
 
 Phase 1 ✅ Fondations → Phase 2 ✅ pipeline de couplage → Phase 3 ✅ avantage
-unique + démo → Phase 4 : arsenal RATISS complet (KTN:Li, hystérésis APT,
-LCT) + validation CIC-IDS2017 → Phase 5 : SMI.
+unique → Phase 4 ✅ arsenal RATISS complet → Phase 5 : fusion par famille,
+validation CIC-IDS2017, LCT, figures + papier SMI.
