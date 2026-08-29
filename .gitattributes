@@ -1,0 +1,2 @@
+datasets/UNSW-NB15/*.csv filter=lfs diff=lfs merge=lfs -text
+datasets/UNSW-NB15/*.zip filter=lfs diff=lfs merge=lfs -text
