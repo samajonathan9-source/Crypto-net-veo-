@@ -1,0 +1,21 @@
+{
+  "oracle": 0.328,
+  "static": 0.175,
+  "static_channel": "edge",
+  "adaptive": 0.339,
+  "adaptive_fpr": 0.035,
+  "per_family": {
+    "DoS": 0.172,
+    "Exploits": 0.264,
+    "Fuzzers": 0.391,
+    "Generic": 0.527
+  },
+  "channel_map": {
+    "Generic": "cumul_drift",
+    "Normal": "classical",
+    "DoS": "entropie",
+    "Exploits": "frustration",
+    "Fuzzers": "edge"
+  },
+  "runtime_s": 669.3
+}
