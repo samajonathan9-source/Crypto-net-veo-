@@ -1,0 +1,12 @@
+{
+  "n_folds": 4,
+  "mean_recall": 0.342,
+  "std_recall": 0.227,
+  "per_fold": [
+    0.653,
+    0.319,
+    0.384,
+    0.014
+  ],
+  "runtime_s": 673.3
+}
