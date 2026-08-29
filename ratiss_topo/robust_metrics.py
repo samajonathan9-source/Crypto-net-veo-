@@ -50,6 +50,30 @@ def extremal_weight(corr: np.ndarray) -> float:
     return float(abs(corr[i, j]))
 
 
+def spectral_channels(corr: np.ndarray) -> dict:
+    """Canaux spectraux — la réorganisation des SIGNES de corrélation.
+
+    P_sig travaille sur |C| : il est aveugle aux inversions de signe (le
+    tissage). Le spectre de C, lui, les voit : une réorganisation des
+    signes déplace les petites valeurs propres et la participation
+    effective (nombre de directions corrélées indépendantes).
+
+    - pr : participation ratio (sum λ)² / sum λ² — bas = structure concentrée
+    - neg_energy : fraction des corrélations négatives (hors diagonale) —
+      monte quand le tissage inverse des signes. (On ne peut pas utiliser
+      les valeurs propres négatives : le shrinkage de régularisation rend
+      toute matrice définie positive.)
+    """
+    eigvals = np.linalg.eigvalsh(corr)
+    lam = np.clip(eigvals, 0, None)
+    total = lam.sum()
+    pr = float(total**2 / max((lam**2).sum(), 1e-12))
+    d = corr.shape[0]
+    off_diag = corr[~np.eye(d, dtype=bool)]
+    neg = float(np.mean(off_diag < -1e-9))
+    return {"pr": pr, "neg_energy": neg}
+
+
 def coupled_metric(corr: np.ndarray, seuil: float = 0.05) -> dict:
     """Vote combiné P_sig seuillé + corrélation extrême + entropie.
 

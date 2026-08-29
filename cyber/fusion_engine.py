@@ -64,15 +64,18 @@ class FusionEngine:
         }
 
     def combine(self, scores: dict[str, float]) -> float:
-        """Score fusionné : somme pondérée des z-scores.
+        """Score fusionné : max des z-scores pondérés de tous les canaux.
 
-        scores doit contenir "classical" (max des détecteurs classiques)
-        et "topo" (métrique couplée RATISS).
+        Un seul canal qui crie suffit à alerter (les attaques furtives ne
+        laissent qu'UNE trace — il faut l'entendre). w_classical/w_topo
+        pondèrent la branche symptômes vs la branche structure.
         """
         z = self.normalize(scores)
-        return self.w_classical * z.get("classical", 0.0) + self.w_topo * z.get(
-            "topo", 0.0
-        )
+        best = 0.0
+        for k, zk in z.items():
+            w = self.w_classical if k == "classical" else self.w_topo
+            best = max(best, w * zk)
+        return best
 
     def adaptive_threshold(self, combined_normal: np.ndarray, fpr_target: float = 0.02) -> float:
         """Seuil tel que le taux de faux positifs sur le flux normal de
