@@ -1,0 +1,44 @@
+{
+  "n_windows": 5487,
+  "fpr_target": 0.02,
+  "mean_recall": 0.327,
+  "per_family": {
+    "DoS": {
+      "classical": 0.069,
+      "psig": 0.0,
+      "pr": 0.0,
+      "edge": 0.103,
+      "entropie": 0.138,
+      "frustration": 0.069,
+      "cumul_drift": 0.0
+    },
+    "Exploits": {
+      "classical": 0.174,
+      "psig": 0.017,
+      "pr": 0.027,
+      "edge": 0.199,
+      "entropie": 0.08,
+      "frustration": 0.274,
+      "cumul_drift": 0.005
+    },
+    "Fuzzers": {
+      "classical": 0.141,
+      "psig": 0.016,
+      "pr": 0.0,
+      "edge": 0.391,
+      "entropie": 0.0,
+      "frustration": 0.062,
+      "cumul_drift": 0.0
+    },
+    "Generic": {
+      "classical": 0.016,
+      "psig": 0.002,
+      "pr": 0.0,
+      "edge": 0.001,
+      "entropie": 0.042,
+      "frustration": 0.0,
+      "cumul_drift": 0.506
+    }
+  },
+  "runtime_s": 668.8
+}
