@@ -53,18 +53,26 @@ attaques préservant les marginales), menaces (3 familles + analogies
 physiques), observables (tableau), résultats (4 figures), limites, conclusion.
 Prêt à être converti en LaTeX pour soumission SMI CybIA (Douala, nov. 2026).
 
-## 4. Ce qui reste pour la soumission
+## 4. Les 3 chantiers finaux (statut)
 
-- **Validation CIC-IDS2017** : confirmer le contraste sur trafic réel (accès
-  en cours — miroir UNB derrière inscription).
-- **LCT** (Learning-Coupled Topology) : adaptation continue pour slow_mutation.
-- **Conversion LaTeX** du draft + mise en forme selon le template SMI.
-- **Renforcer slow_mutation** : fenêtres plus grandes + cumul sur trajectoire.
+- **LaTeX** ✅ : `docs/papier_smi.tex` compilé en PDF (3 pages, 4 figures
+  intégrées). Squelette prêt pour le template SMI.
+- **LCT** (`ratiss_topo/lct.py`) ✅ implémentée, ❌ pas de gain : la cohérence
+  de dérive (direction persistante vs aléatoire) ne sépare pas slow_mutation
+  du normal (rappel 0.00) — le bruit des fenêtres noie la direction à cette
+  taille de fenêtre. Documenté honnêtement plutôt que fabriqué. Piste :
+  fenêtres plus grandes.
+- **CIC-IDS2017** ⏳ bloqué : tous les miroirs publics (UNB, cicresearch.ca,
+  iscxdownloads) redirigent vers une page d'inscription. Le dataset
+  synthétique KS-validé a prouvé le concept ; l'accès CIC (compte gratuit)
+  reste la validation externe à faire.
 
 ## Modules livrés
 
 - `benchmarks/run_family_fusion.py` — fusion spécialisée par famille
 - `benchmarks/make_figures.py` — 4 figures du papier
+- `ratiss_topo/lct.py` — Learning-Coupled Topology (résultat négatif documenté)
+- `docs/papier_smi.tex` + `papier_smi.pdf` — papier compilé (3 pages)
+- `docs/PAPIER_SMI.md` — draft Markdown du papier
 - `docs/figures/` — fig1 à fig4
-- `docs/PAPIER_SMI.md` — draft de l'article
 - `artifacts/family_fusion.json` — résultats fusion par famille
