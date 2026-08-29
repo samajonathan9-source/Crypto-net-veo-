@@ -8,7 +8,7 @@ Cible : démo SMI CybIA, Douala, novembre 2026.
 > Les algorithmes classiques voient les **symptômes**. RATISS voit la
 > **structure**. La fusion voit les deux — et chaque alerte est prouvée.
 
-## État : Phase 4 terminée ✅
+## État : Phase 5 terminée ✅ — prêt pour SMI
 
 | Phase | Fichier | Résultat clé |
 |---|---|---|
@@ -18,7 +18,8 @@ Cible : démo SMI CybIA, Douala, novembre 2026.
 | 1.4 Architecture v1 | `docs/ARCHITECTURE_V1.md` | Fusion par famille + seuils adaptatifs + preuve SHA-256 |
 | 2. Pipeline complet | `docs/PHASE2.md` | Fusion F1=0.911 > classique 0.899 ; rappel R2L +8% ; P_sig R2L p<0.0001 ✅ |
 | 3. Avantage unique | `docs/PHASE3.md` | Attaques invisibles aux stats (KS ✅) : PR détecte la transition de phase 0.95 vs 0.67 |
-| **4. Arsenal RATISS** | `docs/PHASE4.md` | **Kibble-Zurek détecte le weaving 0.79 (classique 0.07) ; hystérésis + frustration KTN ; chaque attaque a son observable** |
+| 4. Arsenal RATISS | `docs/PHASE4.md` | Kibble-Zurek détecte le weaving 0.79 (classique 0.07) ; chaque attaque a son observable |
+| **5. Fusion + papier** | `docs/PHASE5.md` | **Fusion par famille : rappel 0.61 @ FPR 1.7% (2.3× classique) ; 4 figures + draft papier SMI** |
 
 ## Reproduire
 
@@ -28,6 +29,8 @@ PYTHONPATH=. python benchmarks/run_nsl_kdd.py              # benchmark classique
 PYTHONPATH=. python benchmarks/run_topo_probe.py           # sonde topologique
 PYTHONPATH=. python benchmarks/run_phase2_pipeline.py      # pipeline fusion NSL-KDD
 PYTHONPATH=. python benchmarks/run_synthetic_validation.py # avantage unique (synthétique)
+PYTHONPATH=. python benchmarks/run_family_fusion.py        # fusion par famille
+PYTHONPATH=. python benchmarks/make_figures.py             # figures du papier
 
 # API + dashboard
 PYTHONPATH=. python -m uvicorn api.server:app --port 12000
@@ -42,10 +45,11 @@ PYTHONPATH=. python -m streamlit run dashboard/app.py --server.port 12001
 - `api/` — API d'alerte FastAPI (9 canaux, preuve SHA-256, mémoire KZ)
 - `dashboard/` — dashboard Streamlit temps réel (mode campagne)
 - `artifacts/` — résultats JSON (seed 42, reproductible)
-- `docs/` — livrables Phase 1, 2, 3 et 4
+- `docs/` — livrables Phase 1-5, figures du papier, draft SMI
 
 ## Feuille de route
 
 Phase 1 ✅ Fondations → Phase 2 ✅ pipeline de couplage → Phase 3 ✅ avantage
-unique → Phase 4 ✅ arsenal RATISS complet → Phase 5 : fusion par famille,
-validation CIC-IDS2017, LCT, figures + papier SMI.
+unique → Phase 4 ✅ arsenal RATISS complet → Phase 5 ✅ fusion par famille +
+figures + draft papier → **SMI CybIA, Douala, novembre 2026** : validation
+CIC-IDS2017, LCT, conversion LaTeX.

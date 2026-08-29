@@ -1,0 +1,26 @@
+{
+  "fpr_target": 0.02,
+  "global_fpr": 0.0167,
+  "mean_recall": 0.615,
+  "per_channel_percentile": 99.25,
+  "per_family": {
+    "weaving": {
+      "best_channel": "cumul_drift",
+      "recall": 0.672
+    },
+    "phase_transition": {
+      "best_channel": "pr",
+      "recall": 0.897
+    },
+    "slow_mutation": {
+      "best_channel": "cumul_drift",
+      "recall": 0.276
+    }
+  },
+  "active_channels": [
+    "classical",
+    "cumul_drift",
+    "pr"
+  ],
+  "elapsed_s": 7.5
+}
